@@ -3,13 +3,14 @@ API route definitions.
 Exposes POST /api/v1/analyze for the AI Agent.
 """
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Depends, HTTPException
 
+from app.api.deps import get_api_key
 from app.schemas.request import AnalysisBatchRequest
 from app.schemas.response import AnalysisBatchResponse
 from app.services.orchestrator import run_batch_analysis
 
-router = APIRouter(prefix="/api/v1", tags=["analysis"])
+router = APIRouter(prefix="/api/v1", tags=["analysis"], dependencies=[Depends(get_api_key)])
 
 
 @router.post("/analyze", response_model=AnalysisBatchResponse)

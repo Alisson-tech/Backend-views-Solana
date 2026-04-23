@@ -10,6 +10,7 @@ class Settings(BaseSettings):
     """Centralized settings loaded from .env file."""
 
     YOUTUBE_API_KEY: str
+    APP_API_KEY: str
 
     # Extend with additional platform keys as needed:
     # INSTAGRAM_ACCESS_TOKEN: str = ""
