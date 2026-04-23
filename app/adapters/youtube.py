@@ -71,10 +71,9 @@ def _extract_video_id(url: str) -> str | None:
     return ids[0] if ids else None
 
 
-@lru_cache(maxsize=1)
 def _build_youtube_service() -> Any:
     """
-    Build and cache the YouTube Data API v3 service client.
+    Build the YouTube Data API v3 service client.
 
     Uses `google-api-python-client` which is synchronous under the hood;
     actual network calls are wrapped in `asyncio.to_thread` to avoid
