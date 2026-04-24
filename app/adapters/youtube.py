@@ -26,9 +26,8 @@ from functools import lru_cache
 from typing import Any
 from urllib.parse import parse_qs, urlparse
 
-from app.adapters.base import SocialPlatform
+from app.adapters.base import AdapterTask, SocialPlatform
 from app.core.config import settings
-from app.schemas.request import PlatformTask
 from app.schemas.response import Metrics, VideoResult
 
 logger = logging.getLogger(__name__)
@@ -103,7 +102,7 @@ class YouTubeAdapter(SocialPlatform):
 
     async def process_batch(
         self,
-        tasks: list[PlatformTask],
+        tasks: list[AdapterTask],
         deep_analysis: bool,
     ) -> list[VideoResult]:
         """
@@ -273,6 +272,7 @@ class YouTubeAdapter(SocialPlatform):
             video_id=item.get("id", ""),
             title=snippet.get("title", ""),
             user_handle=user_handle,
+            youtube_channel=snippet.get("channelTitle"),
             metrics=Metrics(
                 views=int(stats.get("viewCount", 0)),
                 likes=int(stats.get("likeCount", 0)),

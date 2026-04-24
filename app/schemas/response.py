@@ -28,6 +28,7 @@ class VideoResult(BaseModel):
         video_id: Platform-specific video identifier.
         title: Video title.
         user_handle: Content creator handle this video belongs to.
+        youtube_channel: The visual channel name if available (e.g., from YouTube).
         metrics: Engagement metrics.
         comment_sample: Sample comments when deep_analysis is enabled.
         normalized_at: Timestamp when the data was normalized.
@@ -37,6 +38,7 @@ class VideoResult(BaseModel):
     video_id: str
     title: str = ""
     user_handle: str = ""
+    youtube_channel: str | None = None
     metrics: Metrics
     comment_sample: list[str] = Field(default_factory=list)
     normalized_at: datetime = Field(

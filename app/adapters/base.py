@@ -5,8 +5,19 @@ This ensures the orchestration layer remains platform-agnostic.
 
 from abc import ABC, abstractmethod
 
-from app.schemas.request import PlatformTask
+from dataclasses import dataclass
+
+from pydantic import HttpUrl
+
 from app.schemas.response import VideoResult
+
+
+@dataclass
+class AdapterTask:
+    """Task format used internally by adapters."""
+    url: HttpUrl
+    user_handle: str
+
 
 
 class SocialPlatform(ABC):
@@ -20,7 +31,7 @@ class SocialPlatform(ABC):
     @abstractmethod
     async def process_batch(
         self,
-        tasks: list[PlatformTask],
+        tasks: list[AdapterTask],
         deep_analysis: bool,
     ) -> list[VideoResult]:
         """

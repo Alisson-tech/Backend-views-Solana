@@ -8,8 +8,9 @@ real YouTube API, preserving quota and enabling offline execution.
 import pytest
 from unittest.mock import AsyncMock, patch
 
+from app.adapters.base import AdapterTask
 from app.adapters.youtube import YouTubeAdapter
-from app.schemas.request import AnalysisBatchRequest, PlatformTask
+from app.schemas.request import AnalysisBatchRequest, UserTaskGroup, VideoTask
 from app.services.orchestrator import run_batch_analysis
 
 
@@ -22,7 +23,7 @@ from app.services.orchestrator import run_batch_analysis
 async def test_youtube_adapter_parses_statistics_correctly() -> None:
     """Verify that a mocked videos().list response is correctly normalized."""
     tasks = [
-        PlatformTask(
+        AdapterTask(
             url="https://youtube.com/watch?v=mock1",
             platform="youtube",
             user_handle="@CorteMestre",
@@ -65,7 +66,7 @@ async def test_youtube_adapter_parses_statistics_correctly() -> None:
 async def test_youtube_adapter_handles_missing_video() -> None:
     """When the API returns no items, the adapter should return an empty list."""
     tasks = [
-        PlatformTask(
+        AdapterTask(
             url="https://youtube.com/watch?v=gone123",
             platform="youtube",
             user_handle="@UserGone",
@@ -94,7 +95,7 @@ async def test_youtube_adapter_batches_cross_user_correctly() -> None:
     # 40 videos from @UserA
     for i in range(40):
         tasks.append(
-            PlatformTask(
+            AdapterTask(
                 url=f"https://youtube.com/watch?v=vidA{i:03d}___",
                 platform="youtube",
                 user_handle="@UserA",
@@ -103,7 +104,7 @@ async def test_youtube_adapter_batches_cross_user_correctly() -> None:
     # 35 videos from @UserB
     for i in range(35):
         tasks.append(
-            PlatformTask(
+            AdapterTask(
                 url=f"https://youtube.com/watch?v=vidB{i:03d}___",
                 platform="youtube",
                 user_handle="@UserB",
@@ -130,12 +131,12 @@ async def test_youtube_adapter_reassociates_user_handles() -> None:
     the correct user_handle from the original task.
     """
     tasks = [
-        PlatformTask(
+        AdapterTask(
             url="https://youtube.com/watch?v=vidUserA01",
             platform="youtube",
             user_handle="@UserA",
         ),
-        PlatformTask(
+        AdapterTask(
             url="https://youtube.com/watch?v=vidUserB01",
             platform="youtube",
             user_handle="@UserB",
@@ -235,20 +236,27 @@ async def test_orchestrator_groups_results_by_user() -> None:
         job_id="job-multi-user",
         deep_analysis=False,
         tasks=[
-            PlatformTask(
-                url="https://youtube.com/watch?v=userA_vid1",
-                platform="youtube",
+            UserTaskGroup(
                 user_handle="@UserA",
+                videos=[
+                    VideoTask(
+                        url="https://youtube.com/watch?v=userA_vid1",
+                        platform="youtube",
+                    ),
+                    VideoTask(
+                        url="https://youtube.com/watch?v=userA_vid2",
+                        platform="youtube",
+                    ),
+                ]
             ),
-            PlatformTask(
-                url="https://youtube.com/watch?v=userA_vid2",
-                platform="youtube",
-                user_handle="@UserA",
-            ),
-            PlatformTask(
-                url="https://youtube.com/watch?v=userB_vid1",
-                platform="youtube",
+            UserTaskGroup(
                 user_handle="@UserB",
+                videos=[
+                    VideoTask(
+                        url="https://youtube.com/watch?v=userB_vid1",
+                        platform="youtube",
+                    )
+                ]
             ),
         ],
     )
@@ -257,17 +265,17 @@ async def test_orchestrator_groups_results_by_user() -> None:
         "items": [
             {
                 "id": "userA_vid1",
-                "snippet": {"title": "A1"},
+                "snippet": {"title": "A1", "channelTitle": "Channel A"},
                 "statistics": {"viewCount": "100", "likeCount": "10", "commentCount": "1"},
             },
             {
                 "id": "userA_vid2",
-                "snippet": {"title": "A2"},
+                "snippet": {"title": "A2", "channelTitle": "Channel A"},
                 "statistics": {"viewCount": "200", "likeCount": "20", "commentCount": "2"},
             },
             {
                 "id": "userB_vid1",
-                "snippet": {"title": "B1"},
+                "snippet": {"title": "B1", "channelTitle": "Channel B"},
                 "statistics": {"viewCount": "300", "likeCount": "30", "commentCount": "3"},
             },
         ]

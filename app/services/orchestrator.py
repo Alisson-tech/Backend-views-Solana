@@ -12,8 +12,9 @@ import asyncio
 import logging
 from collections import defaultdict
 
+from app.adapters.base import AdapterTask
 from app.adapters.factory import get_adapter
-from app.schemas.request import AnalysisBatchRequest, PlatformTask
+from app.schemas.request import AnalysisBatchRequest
 from app.schemas.response import (
     AnalysisBatchResponse,
     UserSummary,
@@ -39,6 +40,7 @@ def _group_results_by_user(results: list[VideoResult]) -> list[UserSummary]:
     for handle, videos in user_map.items():
         # Collect unique platforms for this user
         platforms = sorted({v.platform for v in videos})
+
         summaries.append(
             UserSummary(
                 user_handle=handle,
@@ -71,10 +73,15 @@ async def run_batch_analysis(
     Returns:
         An AnalysisBatchResponse with results grouped by user_handle.
     """
-    # Step 1: Group tasks by platform
-    grouped: dict[str, list[PlatformTask]] = defaultdict(list)
-    for task in request.tasks:
-        grouped[task.platform.lower()].append(task)
+    # Step 1: Flatten user tasks and group by platform
+    grouped: dict[str, list[AdapterTask]] = defaultdict(list)
+    for group in request.tasks:
+        for video in group.videos:
+            task = AdapterTask(
+                url=video.url,
+                user_handle=group.user_handle
+            )
+            grouped[video.platform.lower()].append(task)
 
     # Step 2 & 3: Build coroutines and run concurrently
     coroutines = []
