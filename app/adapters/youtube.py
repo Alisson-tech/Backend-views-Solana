@@ -273,6 +273,7 @@ class YouTubeAdapter(SocialPlatform):
             title=snippet.get("title", ""),
             user_handle=user_handle,
             youtube_channel=snippet.get("channelTitle"),
+            youtube_channel_id=snippet.get("channelId"),
             metrics=Metrics(
                 views=int(stats.get("viewCount", 0)),
                 likes=int(stats.get("likeCount", 0)),
